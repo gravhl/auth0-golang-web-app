@@ -12,5 +12,3 @@ Like this:
 ```
 helm install -f login-gravhl/auth0secrets.yaml -f login-gravhl/regcreds.yaml  --dry-run login-gravhl login-gravhl
 ```
-
-or similar.

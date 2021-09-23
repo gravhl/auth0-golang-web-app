@@ -10,6 +10,7 @@ func IsAuthenticated(w http.ResponseWriter, r *http.Request, next http.HandlerFu
 
 	session, err := app.Store.Get(r, "auth-session")
 	if err != nil {
+		app.Log.Errorf("Store.Get: %v", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

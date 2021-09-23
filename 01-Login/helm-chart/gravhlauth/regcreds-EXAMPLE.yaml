@@ -1,0 +1,6 @@
+imageCredentials:
+  registry: net.tlaloc.us:4443
+  username: PLAINTEXTUSER
+  password: PLAINTEXTPASS
+  email: email@here.com
+

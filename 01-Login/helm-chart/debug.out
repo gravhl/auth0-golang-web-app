@@ -1,0 +1,237 @@
+NAME: login-gravhl
+LAST DEPLOYED: Sat Sep 18 19:14:54 2021
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+USER-SUPPLIED VALUES:
+auth0clientid: Vs4axIplWzon09gwxPOrdNhqbOUVMkfD
+auth0clientsecret: Z21QS3Nyc1VOVVV0VEFvUm1XWnprbV9YQThlNWJjekx5UDJPcl94bjI5ZTUwWXFnX094bzFHcGo4QnF1T0lCRg==
+imageCredentials:
+  email: ed@izuma.net
+  password: 7s&D8Fbq>>_p
+  registry: net.tlaloc.us:4443
+  username: ed
+
+COMPUTED VALUES:
+affinity: {}
+arguments: []
+auth0callbackurl: /login
+auth0clientid: Vs4axIplWzon09gwxPOrdNhqbOUVMkfD
+auth0clientsecret: Z21QS3Nyc1VOVVV0VEFvUm1XWnprbV9YQThlNWJjekx5UDJPcl94bjI5ZTUwWXFnX094bzFHcGo4QnF1T0lCRg==
+autoscaling:
+  enabled: false
+  maxReplicas: 100
+  minReplicas: 1
+  targetCPUUtilizationPercentage: 80
+fullnameOverride: ""
+image:
+  pullPolicy: Always
+  repository: gcr.io/gravhl1/auth0login
+  tag: latest
+imageCredentials:
+  email: ed@izuma.net
+  password: 7s&D8Fbq>>_p
+  registry: net.tlaloc.us:4443
+  username: ed
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  enabled: true
+  hosts:
+  - host: login.gravhl.com
+    paths:
+    - backend:
+        serviceName: loginsrv
+        servicePort: 3000
+      path: /login
+      pathType: Prefix
+  tls:
+  - hosts:
+    - login.gravhl.com
+    secretName: gravhl-cloudflare
+nameOverride: ""
+nodeSelector: {}
+podAnnotations: {}
+podSecurityContext: {}
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  port: 3000
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  create: true
+  name: ""
+tolerations: []
+
+HOOKS:
+---
+# Source: login-gravhl/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "login-gravhl-test-connection"
+  labels:
+    helm.sh/chart: login-gravhl-0.1.0
+    app.kubernetes.io/name: login-gravhl
+    app.kubernetes.io/instance: login-gravhl
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['login-gravhl:3000']
+  restartPolicy: Never
+MANIFEST:
+---
+# Source: login-gravhl/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: login-gravhl
+  labels:
+    helm.sh/chart: login-gravhl-0.1.0
+    app.kubernetes.io/name: login-gravhl
+    app.kubernetes.io/instance: login-gravhl
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: login-gravhl/templates/regcred.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred-login
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJuZXQudGxhbG9jLnVzOjQ0NDMiOnsidXNlcm5hbWUiOiJlZCIsInBhc3N3b3JkIjoiN3MmRDhGYnE+Pl9wIiwiZW1haWwiOiJlZEBpenVtYS5uZXQiLCJhdXRoIjoiWldRNk4zTW1SRGhHWW5FK1BsOXcifX19
+---
+# Source: login-gravhl/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: login-gravhl-auth
+data:
+  auth0clientid: Vs4axIplWzon09gwxPOrdNhqbOUVMkfD
+  auth0clientsecret: Z21QS3Nyc1VOVVV0VEFvUm1XWnprbV9YQThlNWJjekx5UDJPcl94bjI5ZTUwWXFnX094bzFHcGo4QnF1T0lCRg==
+---
+# Source: login-gravhl/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: login-gravhl
+  labels:
+    helm.sh/chart: login-gravhl-0.1.0
+    app.kubernetes.io/name: login-gravhl
+    app.kubernetes.io/instance: login-gravhl
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: login-gravhl
+    app.kubernetes.io/instance: login-gravhl
+---
+# Source: login-gravhl/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: login-gravhl
+  labels:
+    helm.sh/chart: login-gravhl-0.1.0
+    app.kubernetes.io/name: login-gravhl
+    app.kubernetes.io/instance: login-gravhl
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: login-gravhl
+      app.kubernetes.io/instance: login-gravhl
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: login-gravhl
+        app.kubernetes.io/instance: login-gravhl
+    spec:
+      serviceAccountName: login-gravhl
+      securityContext:
+        {}
+      containers:
+        - name: login-gravhl
+          env:
+            - name: AUTH0_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: auth0clientid
+                  name: login-gravhl-auth
+            - name: AUTH0_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: auth0clientsecret
+                  name: login-gravhl-auth
+            - name: AUTH0_CALLBACK_URL
+              value: L2xvZ2lu
+          securityContext:
+            {}
+          image: "gcr.io/gravhl1/auth0login:latest"
+          imagePullPolicy: Always
+          args: 
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {}
+---
+# Source: login-gravhl/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: login-gravhl
+  labels:
+    helm.sh/chart: login-gravhl-0.1.0
+    app.kubernetes.io/name: login-gravhl
+    app.kubernetes.io/instance: login-gravhl
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+    - hosts:
+        - "login.gravhl.com"
+      secretName: gravhl-cloudflare
+  rules:
+    - host: "login.gravhl.com"
+      http:
+        paths:
+          - path: /login
+            pathType: Prefix
+            backend:
+              service:
+                name: login-gravhl
+                port:
+                  number: 3000
+
+NOTES:
+1. Get the application URL by running these commands:
+  https://login.gravhl.com/login

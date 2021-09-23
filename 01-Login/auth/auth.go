@@ -3,7 +3,8 @@ package auth
 import (
 	"context"
 	"log"
-	"os"
+
+	"app"
 
 	"golang.org/x/oauth2"
 
@@ -19,17 +20,20 @@ type Authenticator struct {
 func NewAuthenticator() (*Authenticator, error) {
 	ctx := context.Background()
 
-	provider, err := oidc.NewProvider(ctx, "https://" + os.Getenv("AUTH0_DOMAIN") + "/")
+	// check that we have the AUTH0_DOMAIN var
+
+	provider, err := oidc.NewProvider(ctx, "https://"+app.Auth0Domain+"/")
 	if err != nil {
+		app.Log.Errorf("Failed to get provider: %v", err)
 		log.Printf("failed to get provider: %v", err)
 		return nil, err
 	}
 
 	conf := oauth2.Config{
-		ClientID:     os.Getenv("AUTH0_CLIENT_ID"),
-		ClientSecret: os.Getenv("AUTH0_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("AUTH0_CALLBACK_URL"),
-		Endpoint: 	  provider.Endpoint(),
+		ClientID:     app.Auth0ClientID,
+		ClientSecret: app.Auth0ClientSecret,
+		RedirectURL:  app.Auth0CallbackURL,
+		Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile"},
 	}
 

@@ -11,6 +11,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := app.Store.Get(r, "auth-session")
 	if err != nil {
+		app.Log.Errorf("Store: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

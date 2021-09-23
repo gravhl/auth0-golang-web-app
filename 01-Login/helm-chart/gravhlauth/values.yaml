@@ -1,24 +1,19 @@
-# Default values for login-gravhl.
+# Default values for gravhlauth.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
-#   repository: net.tlaloc.us:4443/auth0login
-
 image:
-  repository: gcr.io/gravhl1/auth0login
-  pullPolicy: Always
+  repository: net.tlaloc.us:4443/gravhlauth
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
-#imagePullSecrets:
-#  - name: regcred-login
+imagePullSecrets:
+  - name: regcred
 nameOverride: ""
 fullnameOverride: ""
-
-auth0callbackurl: "https://login.gravhl.com/callback"
-auth0domain: "gravhl.us.auth0.com"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -30,20 +25,15 @@ serviceAccount:
   name: ""
 
 arguments: [
+    "-jwt-secret",
+    "mysecret",
+    "-simple",
+    "bob=secret",
+    "-google",
+    "client_id=583045449431-7qlt8fs9bvhd740qe4t5l9jb6gh3qeq8.apps.googleusercontent.com,client_secret=pcQjqSBM3GE6OXRYczczYATY",    
 ]
-# arguments: [
-#     "-jwt-secret",
-#     "mysecret",
-#     "-simple",
-#     "bob=secret",
-#     "-google",
-#     "client_id=583045449431-7qlt8fs9bvhd740qe4t5l9jb6gh3qeq8.apps.googleusercontent.com,client_secret=pcQjqSBM3GE6OXRYczczYATY",
-# ]
 
-#    "-cookie-secure=false", 
-#    "-google",
-#    "client_id=583045449431-7qlt8fs9bvhd740qe4t5l9jb6gh3qeq8.apps.googleusercontent.com,client_secret=pcQjqSBM3GE6OXRYczczYATY",
-
+#     "-cookie-secure=false", 
 
 podAnnotations: {}
 
@@ -60,41 +50,32 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 3000
+  port: 3333
 
 ingress:
   enabled: true
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    # kubernetes.io/ingress.class: nginx
+  annotations: 
+    # nginx.ingress.kubernetes.io/use-regex: "true"
+    kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
     - host: login.gravhl.com
       paths:
         - path:  "/login"
-          pathType: Prefix
           backend:
-            serviceName: "loginsrv"
-            servicePort: 3000      
-        - path:  "/callback"
-          pathType: Prefix
-          backend:
-            serviceName: "loginsrv"
-            servicePort: 3000      
-        - path:  "/logout"
-          pathType: Prefix
-          backend:
-            serviceName: "loginsrv"
-            servicePort: 3000      
+            serviceName: "gravhlauth"
+            servicePort: 8080
         - path:  "/user"
-          pathType: Prefix
           backend:
-            serviceName: "loginsrv"
-            servicePort: 3000      
-  tls: 
-    - secretName: gravhl-cloudflare
-      hosts:
-        - login.gravhl.com
+            serviceName: "gravhlauth"
+            servicePort: 8080
+        - path:  "/users"
+          backend:
+            serviceName: "gravhlauth"
+            servicePort: 8080
+        
+      
+  tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local

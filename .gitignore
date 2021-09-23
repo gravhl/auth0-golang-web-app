@@ -1,1 +1,13 @@
 .DS_Store
+/.vscode
+/01-Login/helm-chart/login-gravhl/regcreds.yaml
+/01-Login/helm-chart/login-gravhl/auth0secrets.yaml
+/01-Login/helm-chart/regcreds.yaml
+/01-Login/helm-chart/regcreds.yaml~
+/01-Login/helm-chart/login-gravhl/.DS_Store
+/01-Login/01-Login
+/01-Login/helm-chart/gravhlauth/regcreds.yaml
+/01-Login/secret-dir
+/01-Login/secret-dir/acme_account+key
+/01-Login/server.crt
+/01-Login/server.key

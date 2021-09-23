@@ -1,0 +1,8 @@
+arguments: [
+    "-jwt-secret",
+    "mysecret",
+    "-simple",
+    "bob=secret",
+    "-google",
+    "client_id=583045449431-7qlt8fs9bvhd740qe4t5l9jb6gh3qeq8.apps.googleusercontent.com,client_secret=pcQjqSBM3GE6OXRYczczYATY",    
+]

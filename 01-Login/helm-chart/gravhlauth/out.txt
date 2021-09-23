@@ -1,0 +1,140 @@
+---
+# Source: gravhlauth/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: RELEASE-NAME-gravhlauth
+  labels:
+    helm.sh/chart: gravhlauth-0.1.0
+    app.kubernetes.io/name: gravhlauth
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: gravhlauth/templates/regcred.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson:
+---
+# Source: gravhlauth/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-gravhlauth
+  labels:
+    helm.sh/chart: gravhlauth-0.1.0
+    app.kubernetes.io/name: gravhlauth
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3333
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: gravhlauth
+    app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: gravhlauth/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-gravhlauth
+  labels:
+    helm.sh/chart: gravhlauth-0.1.0
+    app.kubernetes.io/name: gravhlauth
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gravhlauth
+      app.kubernetes.io/instance: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gravhlauth
+        app.kubernetes.io/instance: RELEASE-NAME
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      serviceAccountName: RELEASE-NAME-gravhlauth
+      securityContext:
+        {}
+      containers:
+        - name: gravhlauth
+          securityContext:
+            {}
+          image: "net.tlaloc.us:4443/loginsrv:latest"
+          imagePullPolicy: IfNotPresent
+          args:  
+            - -cookie-secure=false  
+            - -jwt-secret  
+            - mysecret  
+            - -simple  
+            - bob=secret 
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: http
+          resources:
+            {}
+---
+# Source: gravhlauth/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: RELEASE-NAME-gravhlauth
+  labels:
+    helm.sh/chart: gravhlauth-0.1.0
+    app.kubernetes.io/name: gravhlauth
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  rules:
+    - host: "login.gravhl.com"
+      http:
+        paths:
+          - path: login
+            backend:
+              serviceName: RELEASE-NAME-gravhlauth
+              servicePort: 3333
+---
+# Source: gravhlauth/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "RELEASE-NAME-gravhlauth-test-connection"
+  labels:
+    helm.sh/chart: gravhlauth-0.1.0
+    app.kubernetes.io/name: gravhlauth
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['RELEASE-NAME-gravhlauth:3333']
+  restartPolicy: Never

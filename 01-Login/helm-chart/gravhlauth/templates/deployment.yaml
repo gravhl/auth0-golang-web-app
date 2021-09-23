@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "login-gravhl.fullname" . }}
+  name: {{ include "gravhlauth.fullname" . }}
   labels:
-    {{- include "login-gravhl.labels" . | nindent 4 }}
+    {{- include "gravhlauth.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "login-gravhl.selectorLabels" . | nindent 6 }}
+      {{- include "gravhlauth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,32 +18,17 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "login-gravhl.selectorLabels" . | nindent 8 }}
+        {{- include "gravhlauth.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "login-gravhl.serviceAccountName" . }}
+      serviceAccountName: {{ include "gravhlauth.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          env:
-            - name: AUTH0_DOMAIN
-              value: {{ .Values.auth0domain | b64enc }}
-            - name: AUTH0_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  key: auth0clientid
-                  name: {{ .Release.Name }}-auth
-            - name: AUTH0_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: auth0clientsecret
-                  name: {{ .Release.Name }}-auth
-            - name: AUTH0_CALLBACK_URL
-              value: {{ .Values.auth0callbackurl | b64enc }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -52,15 +37,15 @@ spec:
             - {{ . }} {{ end }}
           ports:
             - name: http
-              containerPort: 3000
+              containerPort: 8080
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /login
               port: http
           readinessProbe:
             httpGet:
-              path: /
+              path: /login
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

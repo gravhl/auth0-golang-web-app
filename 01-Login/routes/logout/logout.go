@@ -3,16 +3,18 @@ package logout
 import (
 	"net/http"
 	"net/url"
-	"os"
+
+	"app"
 )
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
-	domain := os.Getenv("AUTH0_DOMAIN")
+	domain := app.Auth0Domain
 
 	logoutUrl, err := url.Parse("https://" + domain)
 
 	if err != nil {
+		app.Log.Errorf("url.Parse: %v", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -27,13 +29,14 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		scheme = "https"
 	}
 
-	returnTo, err := url.Parse(scheme + "://" +  r.Host)
+	returnTo, err := url.Parse(scheme + "://" + r.Host)
 	if err != nil {
+		app.Log.Errorf("url.Parse: %v", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	parameters.Add("returnTo", returnTo.String())
-	parameters.Add("client_id", os.Getenv("AUTH0_CLIENT_ID"))
+	parameters.Add("client_id", app.Auth0ClientID)
 	logoutUrl.RawQuery = parameters.Encode()
 
 	http.Redirect(w, r, logoutUrl.String(), http.StatusTemporaryRedirect)
